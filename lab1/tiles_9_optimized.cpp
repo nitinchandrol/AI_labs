@@ -3,42 +3,19 @@
 #include <list>
 #include <unordered_map>
 #include <stdlib.h>
+#include "heap.cpp"
 using namespace std;
-
-struct Node_info {
-	int node_num;
-	int parent;
-	int g_cost;
-	int h_cost;
-	Node_info (int id, int parent_id, int g_cost, int h_cost){
-		node_num = id;
-		parent = parent_id;
-		this->g_cost = g_cost;
-		this->h_cost = h_cost;
-	}
-	int getFcost(){
-		return g_cost + h_cost;
-	}
-	bool operator==(const Node_info& node) const{
-		return node_num == node.node_num;
-	}
-};
 
 vector<int> findNextStates(int current_state); 
 int computeH_normal(int stateId);
 int computeH_manhatten(int stateId);
 int computeH(int state_id,int final_state_id);
 
-bool inList(list<Node_info>& alist,int element);
-Node_info getFromList(list<Node_info>& alist, int element);
-void addToList(list<Node_info> &alist, Node_info element);
-void removeFromList(list<Node_info> &alist, Node_info element);
 void aStar(int start_node, int finish_node );
-void printList(list<Node_info> alist);
-void printList(list<int> alist);
 vector< vector<int> > convertIdToVector(int start);
 int convertVectorToId(vector< vector<int> > stateVector );
 void printVector(vector< vector<int> > inputVector);
+void printList(list<int> alist);
 
 int main(){
 	//graph input	
@@ -49,22 +26,22 @@ int main(){
 }
 
 void aStar(int start_node, int finish_node ){
-	list<Node_info > openlist;
-	list<Node_info > closedlist;
+	MinHeap openlist;
+	MinHeap closedlist;
 	unordered_map<int,int> parent;	
-	Node_info dummy_node = Node_info(start_node,-1,0,computeH(start_node,finish_node));
-	openlist.push_back(dummy_node);
+	Node_info* dummy_node = new Node_info(start_node,-1,0,computeH(start_node,finish_node));	
+	openlist.insert(dummy_node);
 	bool found = false;
 	int iteration = 0;
 	while(!openlist.empty()){
-		Node_info current_node = openlist.front();
-		openlist.pop_front();
-		closedlist.push_back(current_node);
-		if(current_node.node_num == finish_node){
+		Node_info* current_node = openlist.findMin();		
+		openlist.deleteMin();
+		closedlist.insert(current_node);
+		if(current_node->node_num == finish_node){
 			found = true;
-			int parent_node = current_node.parent;
+			int parent_node = current_node->parent;
 			list<int> optimal_path;
-			optimal_path.push_front(current_node.node_num);
+			optimal_path.push_front(current_node->node_num);
 			while(parent_node != -1){
 				optimal_path.push_front(parent_node);
 				if(parent.count(parent_node))
@@ -74,38 +51,30 @@ void aStar(int start_node, int finish_node ){
 			}
 			cout<<"optimal path is:\n";
 			printList(optimal_path);
-			cout<< "path length:" << optimal_path.size() - 1 <<endl;
+			cout<< "path length:" << optimal_path.size() - 1 <<endl;	
 			cout<<"iteration number:" << iteration <<endl;			
 			break;
 		}		
 
-		vector<int> children = findNextStates(current_node.node_num);//to be done
+		vector<int> children = findNextStates(current_node->node_num);//to be done
 		for(vector<int>::iterator it = children.begin(); it!= children.end(); it++){			
-			if(*it!=current_node.parent){
-				if(inList(openlist, *it)){
-					Node_info element = getFromList(openlist,*it);
-					if(element.g_cost > current_node.g_cost + 1){ //generalize						
-						removeFromList(openlist,element);
-						element.parent = current_node.node_num;
-						parent[element.node_num] = current_node.node_num;
-						element.g_cost = current_node.g_cost + 1; //generalize						
-						addToList(openlist,element);
+			if(*it!=current_node->parent){
+				Node_info* element = openlist.find(*it);
+				if(element != NULL){
+					if(element->g_cost > current_node->g_cost + 1){ //generalize	
+						parent[element->node_num] = current_node->node_num;					
+						openlist.update(element->node_num,current_node->node_num,current_node->g_cost+1);
 					}
 				} //to be done
 				else if(parent.count(*it)){
 					continue;
 				} else {
-					Node_info dummy_node(*it,current_node.node_num,current_node.g_cost +  1,computeH(*it,finish_node));
-					parent[*it] = current_node.node_num;
-					addToList(openlist,dummy_node);
+					Node_info* dummy_node = new Node_info(*it,current_node->node_num,current_node->g_cost +  1,computeH(*it,finish_node));
+					parent[*it] = current_node->node_num;
+					openlist.insert(dummy_node);
 				}
 			}			
-		}
-		// cout<<"printing open list:\t";
-		// printList(openlist);
-		// cout<<"printing closed list:\t";
-		// printList(closedlist);		
-		// cout<<endl;	
+		}	
 		iteration++;
 	}
 	if(!found){
@@ -118,41 +87,13 @@ int computeH(int state_id,int final_state_id){
 
 }
 
-bool inList(list<Node_info>& alist,int element){
-	for(list<Node_info>::iterator  it = alist.begin(); it!= alist.end(); it++){
-		if (it->node_num == element)
-			return true;
+void printVector(vector< vector<int> > inputVector){
+    for (int i = 0; i < 3; i++){
+		for(int j = 0;  j < 3; j++){
+			cout<<inputVector[i][j]<<' ';
+		}
+		cout<<'\n';
 	}
-	return false;
-}
-
-Node_info getFromList(list<Node_info>& alist, int element){
-	for(list<Node_info>::iterator it = alist.begin(); it!= alist.end(); it++){
-		if (it->node_num == element)
-			return *it;
-	}
-	cout<< "galat ho rha h";
-}
-
-void addToList(list<Node_info> &alist, Node_info element){
-	list<Node_info>::iterator it;
-	for(it = alist.begin(); it!= alist.end(); it++){
-		if (it->getFcost() > element.getFcost())
-			break;
-	}
-	alist.insert(it,element);
-}
-
-void removeFromList(list<Node_info> &alist, Node_info element){
-	alist.remove(element);
-}
-
-void printList(list<Node_info> alist){
-	list<Node_info>::iterator it;
-	for(it = alist.begin(); it!= alist.end(); it++){
-		cout<< it->node_num << ":" << it->getFcost()<< " ";
-	}
-	cout<< endl;
 }
 
 void printList(list<int> alist){
@@ -163,16 +104,6 @@ void printList(list<int> alist){
 	}
 	cout<< endl;
 }
-
-void printVector(vector< vector<int> > inputVector){
-    for (int i = 0; i < 3; i++){
-		for(int j = 0;  j < 3; j++){
-			cout<<inputVector[i][j]<<' ';
-		}
-		cout<<'\n';
-	}
-}
-
 
 vector< vector<int> > convertIdToVector(int start){
 	vector< vector<int> > stateVector(3, vector<int>(3,0));
@@ -261,7 +192,6 @@ vector<int> findNextStates(int Id){
 		nextStates.push_back(convertVectorToId(tempStateVector));
 	}
 	return nextStates;
-
 }
 
 int computeH_normal(int stateId){
