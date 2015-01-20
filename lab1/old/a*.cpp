@@ -3,22 +3,22 @@
 #include <vector>
 using namespace std;
 
-struct Node_info {
-	int node_num;
-	int parent;
+struct State {
+	int state_id;
+	int parent_id;
 	int g_cost;
 	int h_cost;
-	Node_info (int id, int parent_id, int g_cost, int h_cost){
-		node_num = id;
-		parent = parent_id;
+	State (int id, int parent_id, int g_cost, int h_cost){
+		state_id = id;
+		this->parent_id = parent_id;
 		this->g_cost = g_cost;
 		this->h_cost = h_cost;
 	}
 	int getFcost(){
 		return g_cost + h_cost;
 	}
-	bool operator==(const Node_info& node) const{
-		return node_num == node.node_num;
+	bool operator==(const State& node) const{
+		return state_id == node.state_id;
 	}
 };
 
@@ -36,28 +36,28 @@ list<int> findChildNodes(vector<vector <Edge> > &graph, int id){
 	return ans;
 } 
 
-bool inList(list<Node_info>& alist,int element){
-	for(list<Node_info>::iterator  it = alist.begin(); it!= alist.end(); it++){
-		if (it->node_num == element)
+bool inList(list<State>& alist,int element){
+	for(list<State>::iterator  it = alist.begin(); it!= alist.end(); it++){
+		if (it->state_id == element)
 			return true;
 	}
 	return false;
 }
 
-Node_info getFromList(list<Node_info>& alist, int element){
-	for(list<Node_info>::iterator it = alist.begin(); it!= alist.end(); it++){
-		if (it->node_num == element)
+State getFromList(list<State>& alist, int element){
+	for(list<State>::iterator it = alist.begin(); it!= alist.end(); it++){
+		if (it->state_id == element)
 			return *it;
 	}
 	cout<< "galat ho rha h";
 }
 
-void removeFromList(list<Node_info> &alist, Node_info element){
+void removeFromList(list<State> &alist, State element){
 	alist.remove(element);
 }
 
-void addToList(list<Node_info> &alist, Node_info element){
-	list<Node_info>::iterator it;
+void addToList(list<State> &alist, State element){
+	list<State>::iterator it;
 	for(it = alist.begin(); it!= alist.end(); it++){
 		if (it->getFcost() > element.getFcost())
 			break;
@@ -65,10 +65,10 @@ void addToList(list<Node_info> &alist, Node_info element){
 	alist.insert(it,element);
 }
 void aStar(vector<vector<Edge> >& graph, int start_node, int finish_node );
-void printList(list<Node_info> alist){
-	list<Node_info>::iterator it;
+void printList(list<State> alist){
+	list<State>::iterator it;
 	for(it = alist.begin(); it!= alist.end(); it++){
-		cout<< it->node_num << ":" << it->getFcost()<< " ";
+		cout<< it->state_id << ":" << it->getFcost()<< " ";
 	}
 	cout<< endl;
 }
@@ -92,28 +92,28 @@ int main(){
 
 void aStar(vector<vector<Edge> >& graph, int start_node, int finish_node )
 {
-	list<Node_info > openlist;
-	list<Node_info > closedlist;
+	list<State > openlist;
+	list<State > closedlist;
 
-	Node_info dummy_node = Node_info(start_node,-1,0,0);
+	State dummy_node = State(start_node,-1,0,0);
 	openlist.push_back(dummy_node);
 	bool found = false;
 	while(!openlist.empty()){
-		Node_info current_node = openlist.front();
+		State current_node = openlist.front();
 		openlist.pop_front();
 		closedlist.push_back(current_node);
-		if(current_node.node_num == finish_node){
+		if(current_node.state_id == finish_node){
 			found = true;
 			break;
 		}
-		list<int> children = findChildNodes(graph, current_node.node_num);//to be done
+		list<int> children = findChildNodes(graph, current_node.state_id);//to be done
 		for(list<int>::iterator it = children.begin(); it!= children.end(); it++){
-			if(*it!=current_node.parent){
+			if(*it!=current_node.parent_id){
 				if(inList(openlist, *it)){
-					Node_info element = getFromList(openlist,*it);
+					State element = getFromList(openlist,*it);
 					if(element.getFcost() > current_node.g_cost + 1){ //generalize
 						removeFromList(openlist,element);
-						element.parent = current_node.node_num;
+						element.parent_id = current_node.state_id;
 						element.g_cost = current_node.g_cost + 1; //generalize						
 						addToList(openlist,element);
 					}
@@ -121,7 +121,7 @@ void aStar(vector<vector<Edge> >& graph, int start_node, int finish_node )
 				else if(inList(closedlist,*it)){
 					continue;
 				} else {
-					Node_info dummy_node(*it,current_node.node_num,current_node.g_cost +  1,0);
+					State dummy_node(*it,current_node.state_id,current_node.g_cost +  1,0);
 					addToList(openlist,dummy_node);
 				}
 			}			

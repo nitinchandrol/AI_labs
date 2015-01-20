@@ -2,15 +2,17 @@
 #include <string>
 #include <unordered_map>
 #include "state.h"
+
 #define DEBUG false
+
 using namespace std;
 string getBitmap(int pos);
 struct Node{
-	Node_info* state;
+	State* state;
 	Node* left;
 	Node* right;
 	Node* parent;	
-	Node(Node_info* state, Node* parent){
+	Node(State* state, Node* parent){
 		this->state = state;
 		this->parent = parent;
 		left = NULL;
@@ -26,9 +28,9 @@ struct MinHeap{
 		start_node  = NULL;
 		size = 0;
 	}
-	void insert(Node_info* state){
+	void insert(State* state){
 		if(DEBUG){
-			cout << "inserting " << state->node_num << " " << state->getFcost() << " in ";		
+			cout << "inserting " << state->state_id << " " << state->getFcost() << " in ";		
 			this->print(start_node);
 			cout << endl;
 		}		
@@ -61,7 +63,7 @@ struct MinHeap{
 				}
 				next = next.substr(1);								
 			}
-			state_map[state->node_num] = new_node;
+			state_map[state->state_id] = new_node;
 			this->balance(new_node);
 		}
 		size++;	
@@ -74,7 +76,7 @@ struct MinHeap{
 	bool empty(){
 		return size == 0;
 	}
-	Node_info* findMin(){
+	State* findMin(){
 		if(this->empty()){
 			return NULL;
 		} else {
@@ -102,7 +104,7 @@ struct MinHeap{
 			}
 			next = next.substr(1);
 		}
-		state_map.erase(start_node->state->node_num);
+		state_map.erase(start_node->state->state_id);
 		if(last_node == start_node){			
 			delete start_node;
 			start_node = NULL;
@@ -124,7 +126,7 @@ struct MinHeap{
 			(current_node->right->state->getFcost() < current_node->left->state->getFcost() ? current_node->right : 
 				current_node->left);
 		while(node_to_check != NULL && node_to_check->state->getFcost() < current_node->state->getFcost()){			
-			swap(state_map[current_node->state->node_num],state_map[node_to_check->state->node_num]);
+			swap(state_map[current_node->state->state_id],state_map[node_to_check->state->state_id]);
 			swap(current_node->state,node_to_check->state);
 			current_node = node_to_check;
 			node_to_check = (current_node->right == NULL) ? (current_node->left) : 
@@ -136,7 +138,7 @@ struct MinHeap{
 			cout << endl;
 		}		
 	}
-	Node_info* find(int state_id){
+	State* find(int state_id){
 		if(state_map.count(state_id)){
 			return state_map[state_id]->state;
 		} else{
@@ -151,7 +153,7 @@ struct MinHeap{
 			Node* node = state_map[state_id];
 			if (node->state->g_cost < g_cost){
 				node->state->g_cost = g_cost; 
-				node->state->parent = parent_id;
+				node->state->parent_id = parent_id;
 				this->balance(node);
 			}
 		}	
@@ -161,7 +163,7 @@ struct MinHeap{
 			cout << "balancing" << endl;
 		}		
 		while(new_node->parent != NULL && new_node->state->getFcost() < new_node->parent->state->getFcost()){
-			swap(state_map[new_node->state->node_num],state_map[new_node->parent->state->node_num]);
+			swap(state_map[new_node->state->state_id],state_map[new_node->parent->state->state_id]);
 			swap(new_node->state,new_node->parent->state);
 			new_node = new_node->parent;
 			//cout << new_node->parent << endl;

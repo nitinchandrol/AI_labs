@@ -37,19 +37,19 @@ void aStar(int start_node, int finish_node ){
     printVector(goal_vector);
     printVector(start_vector);
     cout<<"----------------------------------------------------------";
-	Node_info* dummy_node = new Node_info(start_node,-1,0,computeH(start_node,goal_vector));
+	State* dummy_node = new State(start_node,-1,0,computeH(start_node,goal_vector));
 	openlist.insert(dummy_node);
 	bool found = false;
 	int iteration = 0;
 	while(!openlist.empty()){
-		Node_info* current_node = openlist.findMin();
+		State* current_node = openlist.findMin();
 		openlist.deleteMin();
 		closedlist.insert(current_node);
-		if(current_node->node_num == finish_node){
+		if(current_node->state_id == finish_node){
 			found = true;
-			int parent_node = current_node->parent;
+			int parent_node = current_node->parent_id;
 			list<int> optimal_path;
-			optimal_path.push_front(current_node->node_num);
+			optimal_path.push_front(current_node->state_id);
 			while(parent_node != -1){
 				optimal_path.push_front(parent_node);
 				if(parent.count(parent_node))
@@ -64,21 +64,21 @@ void aStar(int start_node, int finish_node ){
 			break;
 		}
 
-		vector<int> children = findNextStates(current_node->node_num);//to be done
+		vector<int> children = findNextStates(current_node->state_id);//to be done
 		for(vector<int>::iterator it = children.begin(); it!= children.end(); it++){
-			if(*it!=current_node->parent){
-				Node_info* element = openlist.find(*it);
+			if(*it!=current_node->parent_id){
+				State* element = openlist.find(*it);
 				if(element != NULL){
 					if(element->g_cost > current_node->g_cost + 1){ //generalize
-						parent[element->node_num] = current_node->node_num;
-						openlist.update(element->node_num,current_node->node_num,current_node->g_cost+1);
+						parent[element->state_id] = current_node->state_id;
+						openlist.update(element->state_id,current_node->state_id,current_node->g_cost+1);
 					}
 				} //to be done
 				else if(parent.count(*it)){
 					continue;
 				} else {
-					Node_info* dummy_node = new Node_info(*it,current_node->node_num,current_node->g_cost +  1,computeH(*it,goal_vector));
-					parent[*it] = current_node->node_num;
+					State* dummy_node = new State(*it,current_node->state_id,current_node->g_cost +  1,computeH(*it,goal_vector));
+					parent[*it] = current_node->state_id;
 					openlist.insert(dummy_node);
 				}
 			}
@@ -92,8 +92,6 @@ void aStar(int start_node, int finish_node ){
 
 int computeH(int start_id,vector< vector<int> > &goal_vector){
 	return computeH_manhatten(start_id, goal_vector);
-
-}
 
 void printVector(vector< vector<int> > inputVector){
     for (int i = 0; i < 3; i++){
