@@ -168,7 +168,9 @@ struct MinHeap{
 			new_node = new_node->parent;
 			//cout << new_node->parent << endl;
 		}
-
+	}
+	void remove(){
+		
 	}
 	void print( Node* node){
 		if(node != NULL){
@@ -177,6 +179,7 @@ struct MinHeap{
 			print(node->right);
 		}
 	}
+
 
 };
  

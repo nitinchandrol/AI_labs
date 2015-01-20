@@ -92,6 +92,7 @@ void aStar(int start_node, int finish_node ){
 
 int computeH(int start_id,vector< vector<int> > &goal_vector){
 	return computeH_manhatten(start_id, goal_vector);
+}
 
 void printVector(vector< vector<int> > inputVector){
     for (int i = 0; i < 3; i++){

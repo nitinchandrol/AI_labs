@@ -114,7 +114,7 @@ void aStar(int start_node, int finish_node ){
 }
 
 int computeH(int state_id,int final_state_id){
-	return 0;//computeH_manhatten(state_id);
+	return computeH_manhatten(state_id);
 
 }
 
