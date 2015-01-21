@@ -34,9 +34,10 @@ void aStar(int start_node, int finish_node ){
 	unordered_map<int,int> parent;
 
     vector< vector<int> > goal_vector = convertIdToVector(finish_node), start_vector = convertIdToVector(start_node);
+     cout << "start vector:" << endl;  
+    printVector(convertIdToVector(start_node));
+    cout << "goal vector:" << endl;  
     printVector(goal_vector);
-    cout << endl;
-    printVector(start_vector);
     cout<<"----------------------------------------------------------" << endl;
 	State* dummy_node = new State(start_node,-1,0,computeH(start_node,goal_vector));
 	openlist.insert(dummy_node);

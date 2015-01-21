@@ -20,11 +20,12 @@ int convertVectorToId(vector< vector<int> > stateVector );
 void printVector(vector< vector<int> > inputVector);
 void printList(list<int> alist);
 void printPath(int &intersected_node, unordered_map<int,int> &parent_from_top, unordered_map<int,int> &parent_from_bottom);
-int listHandler(MinHeap &openlist, MinHeap &closedlist, vector< vector<int> > &goal_vector,unordered_map<int,bool> &isNodeClosed,unordered_map<int,int> parent );
+int listHandler(MinHeap &openlist, MinHeap &closedlist, vector< vector<int> > &goal_vector,unordered_map<int,bool> &isNodeClosed,unordered_map<int,int> &parent );
+int iteration = 0;
 
 int main(){
 	//graph input
-	int start_state = 123456078;
+	int start_state = 867254301;//123456078;
 	//cin>>start_state;
 
 
@@ -39,9 +40,11 @@ void aStar(int start_node, int finish_node ){
 	unordered_map<int,bool> isNodeClosed;
 
     vector< vector<int> > goal_vector = convertIdToVector(finish_node), start_vector = convertIdToVector(start_node);
-    printVector(goal_vector);
+    cout << "start vector:" << endl;  
     printVector(start_vector);
-    cout<<"----------------------------------------Computation about to begin--------------------------------";
+    cout << "goal vector:" << endl;  
+    printVector(goal_vector);
+    cout<<"----------------------------------------Computation about to begin--------------------------------" << endl;
 
 	State* dummy_node = new State(start_node,-1,0,computeH(start_node,goal_vector));
 	parent_from_top[start_node] = -3;
@@ -51,21 +54,27 @@ void aStar(int start_node, int finish_node ){
 	openlistBottom.insert(dummy_node2);
 	parent_from_bottom[finish_node] = -4;
 
-	int iteration = 0;
     int intersected_node;
 
-    while(true){
+    while(!openlistTop.empty() && !openlistTop.empty()){
         intersected_node = listHandler(openlistTop,closedlistTop,goal_vector,isNodeClosed,parent_from_top); //iterating from top
-        if(intersected_node > 0){
-            printPath(intersected_node,parent_from_top,parent_from_bottom);
+        if(intersected_node > 0){        	
+            printPath(intersected_node,parent_from_top,parent_from_bottom);            
+            cout << "meeting point is: " << endl;
+            printVector(convertIdToVector(intersected_node));
+            cout << endl;
             break;
         }
         intersected_node = listHandler(openlistBottom,closedlistBottom,start_vector,isNodeClosed, parent_from_bottom); //iterating from bottom
         if(intersected_node > 0){
-            printPath(intersected_node,parent_from_top,parent_from_bottom);
+            printPath(intersected_node,parent_from_top,parent_from_bottom);            
+            cout << "meeting point is: " << endl;
+            printVector(convertIdToVector(intersected_node));
+            cout << endl;
             break;
         }
     }
+    cout << "iteration number: "<< iteration << endl;
 }
 
 void printPath(int &intersected_node, unordered_map<int,int> &parent_from_top, unordered_map<int,int> &parent_from_bottom){
@@ -78,24 +87,28 @@ void printPath(int &intersected_node, unordered_map<int,int> &parent_from_top, u
     }
     current_node = parent_from_bottom[intersected_node];
     while(current_node!=-4){
-        optimalPath.push_front(current_node);
-        current_node = parent_from_top[current_node];
+        optimalPath.push_back(current_node);
+        current_node = parent_from_bottom[current_node];
     }
 
-    int path_size = optimalPath.size();
-    for(list<int>::iterator it = optimalPath.begin(); it!= optimalPath.end(); it++){
-        printVector(convertIdToVector(*it));
-    }
+    int path_size = optimalPath.size() - 1;
+    cout << "optimal path is:" << endl;
+    printList(optimalPath);
+    cout << "path length = " << path_size << endl;
 }
 
-int listHandler(MinHeap &openlist, MinHeap &closedlist, vector< vector<int> > &goal_vector,unordered_map<int,bool> &isNodeClosed,unordered_map<int,int> parent ){
+int listHandler(MinHeap &openlist, MinHeap &closedlist, vector< vector<int> > &goal_vector,unordered_map<int,bool> &isNodeClosed,unordered_map<int,int> &																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																							parent ){
 	if(!openlist.empty()){
+		iteration++;
 		State* current_node = openlist.findMin();
 		openlist.deleteMin();
 		closedlist.insert(current_node);
 
-		bool currentNodeState = isNodeClosed[current_node->state_id];
-		if(currentNodeState){
+		bool current_node_state = false;
+		if(isNodeClosed.count(current_node->state_id))
+			current_node_state = isNodeClosed[current_node->state_id];
+
+		if(current_node_state){
 			return current_node->state_id;
 		}
         isNodeClosed[current_node->state_id] = true;
@@ -109,9 +122,14 @@ int listHandler(MinHeap &openlist, MinHeap &closedlist, vector< vector<int> > &g
 						parent[element->state_id] = current_node->state_id;
 						openlist.update(element->state_id,current_node->state_id,current_node->g_cost+1);
 					}
-				} //to be done
+				} 
 				else if(parent.count(*it)){
-					continue;
+					State* element = closedlist.find(*it);
+					if(element->g_cost > current_node->g_cost + 1){ //generalize
+						parent[element->state_id] = current_node->state_id;
+						closedlist.remove(element);
+						openlist.insert(element);
+					}
 				} else {
 					State* dummy_node = new State(*it,current_node->state_id,current_node->g_cost +  1,computeH(*it,goal_vector));
 					parent[*it] = current_node->state_id;
