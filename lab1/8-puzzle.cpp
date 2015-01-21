@@ -35,8 +35,9 @@ void aStar(int start_node, int finish_node ){
 
     vector< vector<int> > goal_vector = convertIdToVector(finish_node), start_vector = convertIdToVector(start_node);
     printVector(goal_vector);
+    cout << endl;
     printVector(start_vector);
-    cout<<"----------------------------------------------------------";
+    cout<<"----------------------------------------------------------" << endl;
 	State* dummy_node = new State(start_node,-1,0,computeH(start_node,goal_vector));
 	openlist.insert(dummy_node);
 	bool found = false;
@@ -64,20 +65,27 @@ void aStar(int start_node, int finish_node ){
 			break;
 		}
 
-		vector<int> children = findNextStates(current_node->state_id);//to be done
+		vector<int> children = findNextStates(current_node->state_id);
 		for(vector<int>::iterator it = children.begin(); it!= children.end(); it++){
 			if(*it!=current_node->parent_id){
 				State* element = openlist.find(*it);
-				if(element != NULL){
+				if(element != NULL){ // in open list
 					if(element->g_cost > current_node->g_cost + 1){ //generalize
 						parent[element->state_id] = current_node->state_id;
 						openlist.update(element->state_id,current_node->state_id,current_node->g_cost+1);
+						//openlist.remove(element);
+						//openlist.insert(element);
 					}
 				} //to be done
-				else if(parent.count(*it)){
-					continue;
+				else if(parent.count(*it)){ // in closed list
+					State* element = closedlist.find(*it);
+					if(element->g_cost > current_node->g_cost + 1){ //generalize
+						parent[element->state_id] = current_node->state_id;
+						closedlist.remove(element);
+						openlist.insert(element);
+					}
 				} else {
-					State* dummy_node = new State(*it,current_node->state_id,current_node->g_cost +  1,computeH(*it,goal_vector));
+					State* dummy_node = new State(*it,current_node->state_id,current_node->g_cost + 1,computeH(*it,goal_vector));
 					parent[*it] = current_node->state_id;
 					openlist.insert(dummy_node);
 				}

@@ -91,8 +91,12 @@ void aStar(int start_node, int finish_node ){
 						element.g_cost = current_node.g_cost + 1; //generalize						
 						addToList(openlist,element);
 					}
-				} //to be done
-				else if(parent.count(*it)){
+				} 
+				else if(parent.count(*it)){ //to be done
+					State element = getFromList(closedlist,*it);
+					if(element.g_cost > current_node.g_cost + 1){
+						cout << "false";
+					}
 					continue;
 				} else {
 					State dummy_node(*it,current_node.state_id,current_node.g_cost +  1,computeH(*it,finish_node));
