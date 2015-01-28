@@ -13,6 +13,8 @@ int computeH_manhatten(int stateId);
 int computeH(int start_id,vector< vector<int> > &goal_vector);
 int computeH_normal(int start_id, vector< vector<int> > &goal_vector);
 int computeH_manhatten(int start_id, vector< vector<int> > &goal_vector);
+int computeH_xDist(int start_id, vector< vector<int> > &goal_vector);
+bool isReachable(int startId, int goalId);
 
 void aStar(int start_node, int finish_node );
 vector< vector<int> > convertIdToVector(int start);
@@ -25,7 +27,12 @@ int main(){
 	int start_state = 867254301;
 	//cin>>start_state;
 	int goal_state = 123456780;
-	aStar(start_state,goal_state);
+	if(isReachable(start_state, goal_state)){
+		aStar(start_state,goal_state);
+	}
+	else{
+		cout << "Not Reachable\n";
+	}
 }
 
 void aStar(int start_node, int finish_node ){
@@ -34,11 +41,9 @@ void aStar(int start_node, int finish_node ){
 	unordered_map<int,int> parent;
 
     vector< vector<int> > goal_vector = convertIdToVector(finish_node), start_vector = convertIdToVector(start_node);
-     cout << "start vector:" << endl;  
-    printVector(convertIdToVector(start_node));
-    cout << "goal vector:" << endl;  
     printVector(goal_vector);
-    cout<<"----------------------------------------------------------" << endl;
+    printVector(start_vector);
+    cout<<"----------------------------------------------------------";
 	State* dummy_node = new State(start_node,-1,0,computeH(start_node,goal_vector));
 	openlist.insert(dummy_node);
 	bool found = false;
@@ -66,27 +71,20 @@ void aStar(int start_node, int finish_node ){
 			break;
 		}
 
-		vector<int> children = findNextStates(current_node->state_id);
+		vector<int> children = findNextStates(current_node->state_id);//to be done
 		for(vector<int>::iterator it = children.begin(); it!= children.end(); it++){
 			if(*it!=current_node->parent_id){
 				State* element = openlist.find(*it);
-				if(element != NULL){ // in open list
+				if(element != NULL){
 					if(element->g_cost > current_node->g_cost + 1){ //generalize
 						parent[element->state_id] = current_node->state_id;
 						openlist.update(element->state_id,current_node->state_id,current_node->g_cost+1);
-						//openlist.remove(element);
-						//openlist.insert(element);
 					}
 				} //to be done
-				else if(parent.count(*it)){ // in closed list
-					State* element = closedlist.find(*it);
-					if(element->g_cost > current_node->g_cost + 1){ //generalize
-						parent[element->state_id] = current_node->state_id;
-						closedlist.remove(element);
-						openlist.insert(element);
-					}
+				else if(parent.count(*it)){
+					continue;
 				} else {
-					State* dummy_node = new State(*it,current_node->state_id,current_node->g_cost + 1,computeH(*it,goal_vector));
+					State* dummy_node = new State(*it,current_node->state_id,current_node->g_cost +  1,computeH(*it,goal_vector));
 					parent[*it] = current_node->state_id;
 					openlist.insert(dummy_node);
 				}
@@ -100,7 +98,7 @@ void aStar(int start_node, int finish_node ){
 }
 
 int computeH(int start_id,vector< vector<int> > &goal_vector){
-	return computeH_manhatten(start_id, goal_vector);
+	return computeH_xDist(start_id, goal_vector);
 }
 
 void printVector(vector< vector<int> > inputVector){
@@ -272,4 +270,66 @@ int computeH_manhatten(int start_id, vector< vector<int> > &goal_vector){
     return hvalue;
 
 
+}
+
+vector<int> prevElem(int val, vector< vector<int> > &state){
+	vector<int> ans;
+	for(int i=0; i<3; i++){
+		for(int j=0; j<3; j++){
+			if(state[i][j] != val){
+				ans.push_back(state[i][j]);
+			}
+			else
+				return ans;
+		}
+	}
+}
+
+bool isReachable(int startId, int goalId){
+	vector< vector<int> > start_vector = convertIdToVector(startId);
+	vector< vector<int> > goal_vector = convertIdToVector(goalId);
+	int inversionPair = 0;
+	int count =0;
+	vector<int> prevElemInStart, prevElemInGoal;
+	bool found;
+	for(int i=1; i<9; i++){
+		prevElemInStart  = prevElem(i,start_vector); // this returns vector of element lying before in matrix
+		prevElemInGoal  = prevElem(i,goal_vector);
+		for(int j=0; j<prevElemInStart.size() && prevElemInStart[j] != 0; j++){
+			found = false;
+			for(int k=0; k<prevElemInGoal.size() && prevElemInGoal[k] != 0; k++){
+				if(prevElemInStart[j] == prevElemInGoal[k])
+					found = true;
+			}
+			if(!found){
+				inversionPair ++; 
+			}
+		}
+			
+	}
+	//cout << inversionPair << "\n";
+	if(inversionPair%2 == 0) return true;
+	return false;
+}
+
+int computeH_xDist(int start_id, vector< vector<int> > &goal_vector){
+	vector< vector<int> > start_vector = convertIdToVector(start_id);
+	int hvalue = 0;
+    int temp;
+    pair<int,int> goal_position[9];
+
+    for(int i = 0; i < 3; i++){                                                     //this calculation can be potentially cutted out
+        for(int j = 0; j < 3; j++){
+            goal_position[goal_vector[i][j]] = make_pair(i,j);
+        }
+    }
+
+    for(int i = 0; i < 3; i++){
+        for(int j = 0; j < 3; j++){
+            temp = start_vector[i][j];
+            if(temp==0)continue;
+            hvalue = hvalue + abs(i-goal_position[temp].first);
+        }
+    }
+    return hvalue;
 }
