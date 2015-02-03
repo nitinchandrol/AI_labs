@@ -112,9 +112,41 @@ def apply_axiom3(tokens):
 # 			print item, result_token
 # 			set_to_return.add(result_token);
 # 	return set_to_return;
+def symbol_not(stmt):
+	pos = stmt.find('~')
+	while(pos != -1):
+		prev_string = stmt[pos-1: pos+3]
+		new_string = ""
+		new_string += '(' + stmt[pos+1] + '->' + 'F' + ')'
+		stmt = stmt.replace(prev_string, new_string)
+		pos = stmt.find('~')
+	return stmt;
 
+def symbol_or(stmt):
+	pos = stmt.find('v')
+	while(pos != -1):
+		prev_string = stmt[pos-2: pos+3]
+		new_string = ""
+		new_string += '(' + '(' + stmt[pos-1] + '->' + 'F' + ')' + '->' + stmt[pos+1] + ')'
+		stmt = stmt.replace(prev_string, new_string)
+		pos = stmt.find('v')
+	return stmt;
+	
+def symbol_and(stmt):
+	pos = stmt.find('^')
+	while(pos != -1):
+		prev_string = stmt[pos-2: pos+3]
+		new_string = ""
+		new_string += '(' + '(' + stmt[pos-1] + '->' + '(' + stmt[pos+1] + '->' + 'F' + ')' + ')' + '->' + 'F' + ')'
+		stmt = stmt.replace(prev_string, new_string)
+		pos = stmt.find('^')
+	return stmt;
 
-stmt =  "((p->q)->(((p->F)->q)->q))"
+#stmt = "((p->q)->(((q->F)->p)->q))" ;
+stmt = "((p^q)->(pvq))";
+stmt = symbol_not(stmt)
+stmt = symbol_or(stmt)
+stmt = symbol_and(stmt)
  
 next_tokens = tokenize(stmt);
 orig_tokens = next_tokens
