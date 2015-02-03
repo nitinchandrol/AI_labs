@@ -66,30 +66,37 @@ def apply_axiom1(tokens):
 	return '(' + A + '->(' + B + '->' + A +'))'
 
 def apply_axiom2(tokens):
-	print '(( A -> ( B -> C )) -> (( A -> B ) -> ( A -> C )))'
-	while True:
-		A = raw_input("Enter A: ").replace(' ','')
-		B = raw_input("Enter B: ").replace(' ','')
-		C = raw_input("Enter C: ").replace(' ','')
-		left = '(' + A + '->' + '(' +  B +'->' + C  + '))'
-		if left in tokens:
-			break
-		else:
-			print "Invalid proposition used"
-	return '((' + A + '->' + '(' +  B +'->' + C  + '))' +  '->' + '((' + 'A' +'->' + B +')->(' + A +'->' + C + ')))'
+	#print 
+	return_token_set = set()
+	print "applying axiom 2: (( A -> ( B -> C )) -> (( A -> B ) -> ( A -> C ))) on", tokens
+	for token in tokens:
+		separated = separate(token)
+		if(len(separated) > 1):
+			A = separated[0]
+			separated = separate(separated[1])
+			if(len(separated) > 1):
+				B = separated[0]
+				C = separated[1]
+				result_token = '((' + A + '->' + '(' +  B +'->' + C  + '))' +  '->' + '((' + A +'->' + B +')->(' + A +'->' + C + ')))'				
+				dict[result_token] = ['(' + A + '->' + '(' +  B +'->' + C  + '))','Axiom 2']
+				return_token_set.add(result_token)
+				print result_token
+	return return_token_set
 
 def apply_axiom3(tokens):
-	print '((( A -> F ) -> F ) -> A )'
-	while(True):
-		A = raw_input("Enter A: ").replace(' ','')
-		left = '((' + A + '->F)->F)'
-		if left in tokens:
-			break
-		else:
-			print "Invalid proposition used"
-	return '(((' + A + '->F)->F)->' +  A + ')'	
-
-
+	print "applying axiom 3: ((( A -> F ) -> F ) -> A ) on set ",tokens ;
+	set_to_return = set();
+	for item in tokens:
+		separated = separate(item); #( A -> F ) , F
+		if(len(separated)==2 and separated[1]=='F' ):
+			separated =separate(separated[0]);  # A , F	
+			if(len(separated)==2 and separated[1]=='F' ):
+				A = separated[0]
+				result_token = '(((' + A +'->F)->F)->' + A + ')'
+				dict[result_token] = ['((' + A +'->F)->F)','Axiom 3']
+				set_to_return.add(result_token);
+				print result_token
+	return set_to_return;	
 
 
 
@@ -103,29 +110,20 @@ while(True):
 	if('F' in  next_tokens):
 		print "proved"
 		break
+	next_tokens = next_tokens.union(apply_axiom2(next_tokens))
+	next_tokens = next_tokens.union(apply_axiom3(next_tokens))	
 	tokens = tokens.union(next_tokens);	
-	print "applying modus ponens"
-	next_tokens = modus_ponens(tokens)
-	i = i+1
 	if(i > 10 or len(next_tokens) == 0):
-		print("Human help needed. Current state of the proposition set is:"),
-		print tokens
-		while (1) :			
-			axiom = raw_input("enter the axiom number to apply)(1,2,3):")
-			if axiom == '1':
-				token = apply_axiom1(tokens)
-				break
-			elif axiom == '2':
-				token = apply_axiom2(tokens)
-				break
-			elif axiom == '3': 
-				token = apply_axiom3(tokens)
-				break
-			else :
-				print "invalid axiom number entered"	
-		tokens.add(token)			
+		print("Human help needed. Current state of the proposition set is:"), tokens
+		token = apply_axiom1(tokens)
+		tokens.add(token)
 		i -= 2
+	print "applying modus ponens"	
+	next_tokens = modus_ponens(tokens)	
+	i = i+1	
 
+
+#--------------------------------proof------------------------------------
 state = {'F'}
 proof = ""
 print "proof\n----------------------------------"
