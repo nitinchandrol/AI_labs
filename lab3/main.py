@@ -62,13 +62,14 @@ def apply_axiom1(tokens):
 			break
 		else:
 			print "Invalid proposition used"	
-	B = raw_input("Enter B: ")			
-	return '(' + A + '->(' + B + '->' + A +'))'
+	B = raw_input("Enter B: ")
+	result_token = '(' + A + '->(' + B + '->' + A +'))'
+	dict[result_token] = [A,'Axiom 1']			
+	return result_token
 
 def apply_axiom2(tokens):
-	#print 
 	return_token_set = set()
-	print "applying axiom 2: (( A -> ( B -> C )) -> (( A -> B ) -> ( A -> C ))) on", tokens
+#	print "applying axiom 2: (( A -> ( B -> C )) -> (( A -> B ) -> ( A -> C ))) on", tokens
 	for token in tokens:
 		separated = separate(token)
 		if(len(separated) > 1):
@@ -80,11 +81,11 @@ def apply_axiom2(tokens):
 				result_token = '((' + A + '->' + '(' +  B +'->' + C  + '))' +  '->' + '((' + A +'->' + B +')->(' + A +'->' + C + ')))'				
 				dict[result_token] = ['(' + A + '->' + '(' +  B +'->' + C  + '))','Axiom 2']
 				return_token_set.add(result_token)
-				print result_token
+#				print result_token
 	return return_token_set
 
 def apply_axiom3(tokens):
-	print "applying axiom 3: ((( A -> F ) -> F ) -> A ) on set ",tokens ;
+#	print "applying axiom 3: ((( A -> F ) -> F ) -> A ) on set ",tokens ;
 	set_to_return = set();
 	for item in tokens:
 		separated = separate(item); #( A -> F ) , F
@@ -95,12 +96,26 @@ def apply_axiom3(tokens):
 				result_token = '(((' + A +'->F)->F)->' + A + ')'
 				dict[result_token] = ['((' + A +'->F)->F)','Axiom 3']
 				set_to_return.add(result_token);
-				print result_token
+#				print result_token
 	return set_to_return;	
 
+# def apply_contrapositive(tokens):
+# 	set_to_return = set();
+# 	# (A->B) -> ((B->F)->(A->F))
+# 	for item in tokens:
+# 		separated = separate(item);
+# 		if(len(separated)==2):			
+# 			A = separated[0];
+# 			B = separated[1];
+# 			result_token ='(('+B+'->F)->('+A+'->F)))';
+# 			dict[result_token] = ['('+A+'->'+B')',"contrapositive"];
+# 			print item, result_token
+# 			set_to_return.add(result_token);
+# 	return set_to_return;
 
 
-stmt = "((p->q)->(((q->F)->p)->q))" ;
+stmt =  "((p->q)->(((p->F)->q)->q))"
+ 
 next_tokens = tokenize(stmt);
 orig_tokens = next_tokens
 tokens = set()
@@ -112,6 +127,7 @@ while(True):
 		break
 	next_tokens = next_tokens.union(apply_axiom2(next_tokens))
 	next_tokens = next_tokens.union(apply_axiom3(next_tokens))	
+	#next_tokens = next_tokens.union(apply_contrapositive(next_tokens))
 	tokens = tokens.union(next_tokens);	
 	if(i > 10 or len(next_tokens) == 0):
 		print("Human help needed. Current state of the proposition set is:"), tokens
@@ -136,8 +152,10 @@ while( len(state) != 0):
 		state.remove(ch)	
 		string += "=> " +  ch + " from "	
 		for i in [0,1]:
-			if parent[i] not in orig_tokens:
-				state.add(parent[i])
 			string += parent[i] + ' '	
+			if parent[i]  in orig_tokens or parent[i].startswith('Axiom') or parent[i].startswith("contra") :
+				pass
+			else:	
+				state.add(parent[i])				
 		proof = string + '\n' +  proof
 print proof		
