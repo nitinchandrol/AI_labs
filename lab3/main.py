@@ -112,24 +112,41 @@ def apply_axiom3(tokens):
 # 			print item, result_token
 # 			set_to_return.add(result_token);
 # 	return set_to_return;
+
+def first_closing(stmt,pos):
+	i = pos + 1
+	for i in range(len(stmt)):
+		if(stmt[i] == ')'):
+			return i;
+	return -1
+
 def symbol_not(stmt):
-	pos = stmt.find('~')
+	pos = stmt.rfind('~')
+	print pos
 	while(pos != -1):
-		prev_string = stmt[pos-1: pos+3]
-		new_string = ""
-		new_string += '(' + stmt[pos+1] + '->' + 'F' + ')'
-		stmt = stmt.replace(prev_string, new_string)
-		pos = stmt.find('~')
+		if stmt[pos+1] != '(':
+			prev_string = stmt[pos-1: pos+3]
+			new_string = ""
+			new_string += '(' + stmt[pos+1] + '->' + 'F' + ')'
+			stmt = stmt.replace(prev_string, new_string)
+			pos = stmt.rfind('~')
+		else:
+			prev_string = stmt[pos-1:first_closing(stmt,pos)+2]
+			new_string = ""
+			new_string += '(' + stmt[pos+1:first_closing(stmt,pos)+1] + '->' + 'F' + ')'
+			stmt = stmt.replace(prev_string, new_string)
+			pos = stmt.rfind('~')
 	return stmt;
 
 def symbol_or(stmt):
-	pos = stmt.find('v')
+	pos = stmt.rfind('v')
 	while(pos != -1):
+		
 		prev_string = stmt[pos-2: pos+3]
 		new_string = ""
 		new_string += '(' + '(' + stmt[pos-1] + '->' + 'F' + ')' + '->' + stmt[pos+1] + ')'
 		stmt = stmt.replace(prev_string, new_string)
-		pos = stmt.find('v')
+		pos = stmt.rfind('v')
 	return stmt;
 	
 def symbol_and(stmt):
@@ -143,7 +160,11 @@ def symbol_and(stmt):
 	return stmt;
 
 #stmt = "((p->q)->(((q->F)->p)->q))" ;
-stmt = "((p^q)->(pvq))";
+stmt = "((p^q)->(pvq))"
+#stmt = "((p->q)->((~q)->(~p)))";
+#stmt = "(p->(~(~p)))"
+#stmt = "(pv(qvq))"
+#stmt = "((p->q)->(((~p)->q)->q))"
 stmt = symbol_not(stmt)
 stmt = symbol_or(stmt)
 stmt = symbol_and(stmt)
