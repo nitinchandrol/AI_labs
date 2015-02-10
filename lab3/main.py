@@ -99,19 +99,34 @@ def apply_axiom3(tokens):
 #				print result_token
 	return set_to_return;	
 
-# def apply_contrapositive(tokens):
-# 	set_to_return = set();
-# 	# (A->B) -> ((B->F)->(A->F))
-# 	for item in tokens:
-# 		separated = separate(item);
-# 		if(len(separated)==2):			
-# 			A = separated[0];
-# 			B = separated[1];
-# 			result_token ='(('+B+'->F)->('+A+'->F)))';
-# 			dict[result_token] = ['('+A+'->'+B')',"contrapositive"];
-# 			print item, result_token
-# 			set_to_return.add(result_token);
-# 	return set_to_return;
+def apply_contrapositive(tokens):
+	print "((p->q)->(~q->~p))"
+	while(True):
+		P = raw_input("Enter the preposition from the set: ").replace(' ','')
+		if(P in tokens):
+			break
+		else:
+			print "Invalid proposition used"	
+	separated = separate(P);
+	if(len(separated)==2):			
+		A = separated[0];
+		B = separated[1];
+		separated = separate(A);
+		if(len(separated)==2 and separated[1] == 'F'):
+			R = separated[0]
+		else :
+			R = '('+A+'->F)'	
+
+		separated = separate(B)
+		if(len(separated)==2 and separated[1] == 'F'):
+			L = separated[0]
+		else :
+			L = '('+B+'->F)'	
+		result_token ='(' + L +'->' + R +')';
+		dict[result_token] = [P,"contrapositive"];
+		print P, result_token
+	return result_token;
+
 def symbol_not(stmt):
 	pos = stmt.find('~')
 	while(pos != -1):
@@ -142,8 +157,7 @@ def symbol_and(stmt):
 		pos = stmt.find('^')
 	return stmt;
 
-#stmt = "((p->q)->(((q->F)->p)->q))" ;
-stmt = "((p^q)->(pvq))";
+stmt = "(((p->q)->((r->s)->t))->((u->((r->s)->t))->((p->u)->(s->t))))" 
 stmt = symbol_not(stmt)
 stmt = symbol_or(stmt)
 stmt = symbol_and(stmt)
@@ -163,10 +177,20 @@ while(True):
 	tokens = tokens.union(next_tokens);	
 	if(i > 10 or len(next_tokens) == 0):
 		print("Human help needed. Current state of the proposition set is:"), tokens
-		token = apply_axiom1(tokens)
+		while (1) :			
+			axiom = raw_input("enter the 1 for axiom-1 or 2 for contrapositive:")
+			if axiom == '1':
+				token = apply_axiom1(tokens)
+				break
+			elif axiom == '2':
+				token = apply_contrapositive(tokens)
+				break
+			else :
+				print "invalid  number entered"	
+
 		tokens.add(token)
 		i -= 2
-	print "applying modus ponens"	
+	#print "applying modus ponens"	
 	next_tokens = modus_ponens(tokens)	
 	i = i+1	
 
