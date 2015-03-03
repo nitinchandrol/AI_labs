@@ -157,7 +157,8 @@ def symbol_and(stmt):
 		pos = stmt.find('^')
 	return stmt;
 
-stmt = "(((p->q)->((r->s)->t))->((u->((r->s)->t))->((p->u)->(s->t))))" 
+#stmt = "(((p->q)->((r->s)->t))->((u->((r->s)->t))->((p->u)->(s->t))))" 
+stmt = "((p^q)->(pvq))"
 stmt = symbol_not(stmt)
 stmt = symbol_or(stmt)
 stmt = symbol_and(stmt)
