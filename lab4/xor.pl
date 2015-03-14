@@ -1,5 +1,4 @@
-:- [general].
 
-xor(Y):- connected(in(1,Y),in(1,a1)), connected(in(2,Y),in(1,n1)), connected(in(1,Y),in(1,n2)), connected(in(2,Y),in(2,a2)), not(n1), not(n2), connected(out(n1),in(2,a1)),connected(out(n2),in(1,a2)), and(a1), and(a2), connected(out(a1), in(1,o1)), connected(out(a2), in(2,o1)), or(o1), connected(out(o1),out(Y)), my_retract(n1), my_retract(n2), my_retract(a1), my_retract(a2), my_retract(o1).
+xor(Y):- connected(in(1,Y),in(1,and1)), connected(in(2,Y),in(1,not1)), connected(in(1,Y),in(1,not2)), connected(in(2,Y),in(2,and2)), not(not1), not(not2), connected(out(not1),in(2,and1)),connected(out(not2),in(1,and2)), and(and1), and(and2), connected(out(and1), in(1,or1)), connected(out(and2), in(2,or1)), or(or1), connected(out(or1),out(Y)), my_not_retract(not1), my_not_retract(not2), my_retract(and1), my_retract(and2), my_retract(or1).
 
 my_xor([X1,X2],Y):- assert(signal(in(1,x),X1)), assert(signal(in(2,x),X2)), xor(x), signal(out(x),Y), my_retract(x).

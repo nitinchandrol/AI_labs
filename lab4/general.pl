@@ -8,13 +8,18 @@ and(X):- assert(signal(out(X),0)).
 
 not(X) :- low(in(1,X)),!,assert(signal(out(X),1)). 
 not(X) :- high(in(1,X)),!,assert(signal(out(X),0)).
+ 
 
 low(T1) :- signal(T1,0).
 high(T1) :- signal(T1,1).
 
+
 connected(T1,T2):- low(T1),!,assert(signal(T2,0)).
 connected(T1,T2):- high(T1),!,assert(signal(T2,1)).
 
-my_retract(G) :- retract(signal(in(_,G),_)), retract(signal(out(G),_)).
+my_not_retract(G):- retract(signal(in(_,G),_)), retract(signal(out(G),_)).
+
+my_retract(G) :- retract(signal(in(1,G),_)), retract(signal(in(2,G),_)), retract(signal(out(G),_)).
+
 
 
