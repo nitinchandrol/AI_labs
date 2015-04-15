@@ -50,7 +50,7 @@ def modus_ponens(theorem_set):
             if(len(tokens) == 2 and tokens[0]==arg2):
             	dict[tokens[1]] = [arg2, arg1]
                 to_return.add(tokens[1])
-                # print(tokens[1]+" added")
+                print(tokens[1]+" added")
         #print("--------------")
     return to_return
 
@@ -177,7 +177,7 @@ stmt = "((p^q)->(pvq))"
 #stmt = "(p->(~(~p)))"
 #stmt = "(pv(qvq))"
 #stmt = "((p->q)->(((~p)->q)->q))"
-stmt = "(((p->q)->((r->s)->t))->((u->((r->s)->t))->((p->u)->(s->t))))" 
+stmt = "(p->(((p->q)->((r->s)->t))->((u->((r->s)->t))->((p->u)->(s->t)))))" 
 stmt = symbol_not(stmt)
 stmt = symbol_or(stmt)
 stmt = symbol_and(stmt)
@@ -196,7 +196,7 @@ while(True):
 	#next_tokens = next_tokens.union(apply_contrapositive(next_tokens))
 	tokens = tokens.union(next_tokens);	
 	if(i > 10 or len(next_tokens) == 0):
-		print("Human help needed. Current state of the proposition set is:"), tokens
+		#print("Human help needed. Current state of the proposition set is:"), tokens
 		while (1) :			
 			axiom = raw_input("enter the 1 for axiom-1 or 2 for contrapositive:")
 			if axiom == '1':
