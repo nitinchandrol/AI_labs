@@ -1,13 +1,14 @@
 #include <iostream>
 #include <map>
 #include <string>
+#include <math.h>
 #include <vector>
 
 using namespace std;
 int longest,input_length, output_length, hidden_length;
 
-map<char,array<int,5> > graphene_map;
-map<string,array<int,7> > phoneme_map;
+map<char,vector<int> > graphene_map;
+map<string,vector<int> > phoneme_map;
 void initialize(){
 	graphene_map['a']={0,0,0,0,0};
 	graphene_map['b']={0,0,0,0,1};
@@ -133,100 +134,215 @@ struct CBackProp{
 //        double beta;//      learning rate
 //        double ***prevDwt;//      storage for weight-change made in previous epoch
 //
-//        double sigmoid(double in);//      sigmoid function
-        vector<vector<double> > *out, *delta;
-        vector<vector<vector<double> > > *weight, *prevDwt;
-        vector<int> *lsize;
-        double beta;
-        int numl;
+    vector<vector<double> > *out, *delta;
+    vector<vector<vector<double> > > *weight, *prevDwt;
+    vector<int> *lsize;
+    double beta;
+    int numl;
 
-        ~CBackProp();
+    ~CBackProp();
 
 //      initializes and allocates memory
-        CBackProp(int nl,int *sz,double b,double a){
 
-            // Note that the following are unused delta[0], weight[0],prevDwt[0]
-            //    set no of layers and their sizes
-            numl=nl;
-            lsize.resize(numl);
-
-            for(int i=0;i<numl;i++){
-                lsize[i]=sz[i];
-            }
-
-            //    allocate memory for output of each neuron
-            out.resize(numl);
-            int i;
-            for( i=0;i<numl;i++){
-                out[i].resize(lsize[i]);
-            }
-
-            //    allocate memory for delta
-            delta.resize(numl);
-
-            for(i=1;i<numl;i++){
-                delta[i].resize(lsize[i]);
-            }
-
-            //    allocate memory for weights
-            weight.resize(numl);
-
-            for(i=1;i<numl;i++){
-                weight[i].resize(lsize[i]);
-            }
-            for(i=1;i<numl;i++){
-                for(int j=0;j<lsize[i];j++){
-                    weight[i][j].resize(lsize[i-1]+1);
+    void printWeight(){
+        vector<vector<vector<double> > > w = *weight;
+        for(int i = 0; i < w.size(); i++){
+            for(int j = 0; j < w[i].size(); j++){
+                for(int k = 0; k < w[i][j].size(); k++){
+                    cout<<"weight in row:"<<i<< "from:"<<j<<"<< to: "<<k<<" is:"<<w[i][j][k]<<endl;
                 }
             }
+        }
+    }
 
-            //    allocate memory for previous weights
-            prevDwt.resize(numl);
+    CBackProp(int nl,int *sz,double b){
 
-            for(i=1;i<numl;i++){
-                prevDwt[i].resize(lsize[i]);
+        // Note that the following are unused delta[0], weight[0],prevDwt[0]
+        //    set no of layers and their sizes
+        numl=nl;
+        (*lsize).resize(numl);
 
-            }
-            for(i=1;i<numl;i++){
-                for(int j=0;j<lsize[i];j++){
-                    prevDwt[i][j].resize(lsize[i-1]+1);
-                }
-            }
-
-            //    seed and assign random weights
-            srand((unsigned)(time(NULL)));
-            for(i=1;i<numl;i++)
-                for(int j=0;j<lsize[i];j++)
-                    for(int k=0;k<lsize[i-1]+1;k++)
-                        weight[i][j][k]=0.0;
-
-            //    initialize previous weights to 0 for first iteration
-            for(i=1;i<numl;i++)
-                for(int j=0;j<lsize[i];j++)
-                    for(int k=0;k<lsize[i-1]+1;k++)
-                        prevDwt[i][j][k]=0.0;
+        for(int i=0;i<numl;i++){
+            (*lsize)[i]=sz[i];
         }
 
+        //    allocate memory for output of each neuron
+        (*out).resize(numl);
+        int i;
+        for( i=0;i<numl;i++){
+            (*out)[i].resize((*lsize)[i]);
+        }
+
+        //    allocate memory for delta
+        (*delta).resize(numl);
+
+        for(i=1;i<numl;i++){
+            (*delta)[i].resize((*lsize)[i]);
+        }
+
+        //    allocate memory for weights
+        (*weight).resize(numl);
+
+        for(i=1;i<numl;i++){
+            (*weight)[i].resize((*lsize)[i]);
+        }
+        for(i=1;i<numl;i++){
+            for(int j=0;j<(*lsize)[i];j++){
+                (*weight)[i][j].resize((*lsize)[i-1]+1);
+            }
+        }
+
+        //    allocate memory for previous weights
+        (*prevDwt).resize(numl);
+
+        for(i=1;i<numl;i++){
+            (*prevDwt)[i].resize((*lsize)[i]);
+
+        }
+        for(i=1;i<numl;i++){
+            for(int j=0;j<(*lsize)[i];j++){
+                (*prevDwt)[i][j].resize((*lsize)[i-1]+1);
+            }
+        }
+
+        //    seed and assign random weights
+        srand((unsigned)(time(NULL)));
+        for(i=1;i<numl;i++)
+            for(int j=0;j<(*lsize)[i];j++)
+                for(int k=0;k<(*lsize)[i-1]+1;k++)
+                    (*weight)[i][j][k]=0.0;
+
+        //    initialize previous weights to 0 for first iteration
+        for(i=1;i<numl;i++)
+            for(int j=0;j<(*lsize)[i];j++)
+                for(int k=0;k<(*lsize)[i-1]+1;k++)
+                    (*prevDwt)[i][j][k]=0.0;
+    }
+
+    double sigmoid(double in){  // sigmoid function
+        return (1/(1+exp(-in)));
+    }
+
+
 //      backpropogates error for one set of input
-        void bpgt(double *in,double *tgt);
+    void bpgt(vector<int> *in,vector<int> *tgt){
+        double sum;
+
+        //	update output values for each neuron
+        ffwd(in);
+
+        //	find delta for output layer
+        for(int i=0;i<(*lsize)[numl-1];i++){
+            (*delta)[numl-1][i]=(*out)[numl-1][i]*
+            (1-(*out)[numl-1][i])*((*tgt)[i]-(*out)[numl-1][i]);
+        }
+
+        //	find delta for hidden layers
+        for(int i=numl-2;i>0;i--){
+            for(int j=0;j<(*lsize)[i];j++){
+                sum=0.0;
+                for(int k=0;k<(*lsize)[i+1];k++){
+                    sum+=(*delta)[i+1][k]*(*weight)[i+1][k][j];
+                }
+                (*delta)[i][j]=(*out)[i][j]*(1-(*out)[i][j])*sum;
+            }
+        }
+
+
+        //	adjust weights usng steepest descent
+        for(int i=1;i<numl;i++){
+            for(int j=0;j<(*lsize)[i];j++){
+                for(int k=0;k<(*lsize)[i-1];k++){
+                    (*prevDwt)[i][j][k]=beta*(*delta)[i][j]*(*out)[i-1][k];
+                    (*weight)[i][j][k]+=(*prevDwt)[i][j][k];
+                }
+                (*prevDwt)[i][j][(*lsize)[i-1]]=beta*(*delta)[i][j];
+                (*weight)[i][j][(*lsize)[i-1]]+=(*prevDwt)[i][j][(*lsize)[i-1]];
+            }
+        }
+    }
+
 
 //      feed forwards activations for one set of inputs
-        void ffwd(double *in);
+    void ffwd(vector<int> *in){
+        double sum;
+
+ // assign content to input layer
+
+        for(int i=0;i < (*lsize)[0];i++)
+            (*out)[0][i]=(*in)[i];
+
+
+// assign output(activation) value
+// to each neuron usng sigmoid func
+
+        // For each layer
+        for(int i=1;i < numl;i++){
+            // For each neuron in current layer
+            for(int j=0;j < (*lsize)[i];j++){
+                sum=0.0;
+                // For input from each neuron in preceding layer
+                for(int k=0;k < (*lsize)[i-1];k++){
+                        // Apply weight to inputs and add to sum
+                        sum+= (*out)[i-1][k]*(*weight)[i][j][k];
+                }
+                // Apply bias
+                sum+=(*weight)[i][j][(*lsize)[i-1]];
+                // Apply sigmoid function
+                (*out)[i][j]=sigmoid(sum);
+            }
+        }
+    }
 
 //      returns mean square error of the net
-        double mse(double *tgt);
+    double mse(vector<int> *tgt){
+        double mse=0;
+        for(int i=0;i<(*lsize)[numl-1];i++){
+            mse+=((*tgt)[i]-(*out)[numl-1][i])*((*tgt)[i]-(*out)[numl-1][i]);
+        }
+        return mse/2;
+    }
+
 
 //      returns i'th output of the net
-        double Out(int i) const;
+    double Out(int i) const;
 };
+
+void convertInputStringToBinary(string input, vector<int> &input_to_int){
+    for(int i = 0; i < input.size(); i++){
+       input_to_int.insert(input_to_int.end(),graphene_map[input[i]].begin(),graphene_map[input[i]].end());
+    }
+}
+
+void convertOutputStringToBinary(vector<string> output, vector<int>& output_to_int){
+    for(int i = 0; i < output.size(); i++){
+        output_to_int.insert(output_to_int.end(),phoneme_map[output[i]].begin(),phoneme_map[output[i]].end());
+    }
+}
 
 int main(){
 	longest = 9;
-	input_length = longest*5;
-	output_length = longest*7;
-	hidden_length = (input_length + output_length)/2;
+    int layer_count = 3;
+    int layer_size[] = {longest*5,longest*6, longest*7};
+    int beta = 0.2;
+    double thresh = 0.00001;
+    CBackProp *bp = new CBackProp(layer_count, layer_size, beta);
 
+    for(long i = 0 ; i < 10000000; i++){
 
-
-
+        string input = "KUBENA";
+        vector<string> output = {"K", "AH0" ,"B", "IY1", "N", "AH0"};
+        vector<int> input_to_int, output_to_int;
+        convertInputStringToBinary(input,input_to_int);
+        convertOutputStringToBinary(output,output_to_int);
+        bp->bpgt(&input_to_int,&output_to_int);
+        double error = bp->mse(&output_to_int);
+        if(error < thresh) {
+            cout<<"accuracy of threshold acheived in iteration:"<<i<< " and error is"<<error<<'\n';
+            break;
+        }
+        if(i%10==0){
+            cout<<"error is "<<bp->mse(&output_to_int);
+        }
+    }
 }
