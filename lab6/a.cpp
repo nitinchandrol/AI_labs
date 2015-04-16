@@ -1,41 +1,72 @@
 #include <iostream>
 #include <map>
+#include <fstream>
 #include <string>
 #include <math.h>
 #include <vector>
 
 using namespace std;
+#define debug(X) {if(DEBUG) cout << X<<endl;}
+
+bool DEBUG = true;
 int longest,input_length, output_length, hidden_length;
 
 map<char,vector<int> > graphene_map;
 map<string,vector<int> > phoneme_map;
+
+void tokenize(const string& str,vector<string>& tokens,const string& delimiters){
+    // Skip delimiters at beginning.
+    string::size_type lastPos = str.find_first_not_of(delimiters, 0);
+    // Find first "non-delimiter".
+    string::size_type pos     = str.find_first_of(delimiters, lastPos);
+
+    while (string::npos != pos || string::npos != lastPos)
+    {
+        // Found a token, add it to the vector.
+        tokens.push_back(str.substr(lastPos, pos - lastPos));
+        // Skip delimiters.  Note the "not_of"
+        lastPos = str.find_first_not_of(delimiters, pos);
+        // Find next "non-delimiter"
+        pos = str.find_first_of(delimiters, lastPos);
+    }
+}
+
+void printVector(vector<int> &in){
+    debug("size:"<<in.size());
+    for(int i = 0; i < in.size(); i++){
+        cout<<in[i]<<' ';
+    }
+    cout<<"\n";
+}
+
 void initialize(){
-	graphene_map['a']={0,0,0,0,0};
-	graphene_map['b']={0,0,0,0,1};
-	graphene_map['c']={0,0,0,1,0};
-	graphene_map['d']={0,0,0,1,1};
-	graphene_map['e']={0,0,1,0,0};
-	graphene_map['f']={0,0,1,0,1};
-	graphene_map['g']={0,0,1,1,0};
-	graphene_map['h']={0,0,1,1,1};
-	graphene_map['i']={0,1,0,0,0};
-	graphene_map['j']={0,1,0,0,1};
-	graphene_map['k']={0,1,0,1,0};
-	graphene_map['l']={0,1,0,1,1};
-	graphene_map['m']={0,1,1,0,0};
-	graphene_map['n']={0,1,1,0,1};
-	graphene_map['o']={0,1,1,1,0};
-	graphene_map['p']={0,1,1,1,1};
-	graphene_map['q']={1,0,0,0,0};
-	graphene_map['r']={1,0,0,0,1};
-	graphene_map['s']={1,0,0,1,0};
-	graphene_map['t']={1,0,0,1,1};
-	graphene_map['u']={1,0,1,0,0};
-	graphene_map['v']={1,0,1,0,1};
-	graphene_map['w']={1,0,1,1,0};
-	graphene_map['x']={1,0,1,1,1};
-	graphene_map['y']={1,1,0,0,0};
-	graphene_map['z']={1,1,0,0,1};
+    debug("intitializing");
+	graphene_map['A']={0,0,0,0,1};
+	graphene_map['B']={0,0,0,1,0};
+	graphene_map['C']={0,0,0,1,1};
+	graphene_map['D']={0,0,1,0,0};
+	graphene_map['E']={0,0,1,0,1};
+	graphene_map['F']={0,0,1,1,0};
+	graphene_map['G']={0,0,1,1,1};
+	graphene_map['H']={0,1,0,0,0};
+	graphene_map['I']={0,1,0,0,1};
+	graphene_map['J']={0,1,0,1,0};
+	graphene_map['K']={0,1,0,1,1};
+	graphene_map['L']={0,1,1,0,0};
+	graphene_map['M']={0,1,1,0,1};
+	graphene_map['N']={0,1,1,1,0};
+	graphene_map['O']={0,1,1,1,1};
+	graphene_map['P']={1,0,0,0,0};
+	graphene_map['Q']={1,0,0,0,1};
+	graphene_map['R']={1,0,0,1,0};
+	graphene_map['S']={1,0,0,1,1};
+	graphene_map['T']={1,0,1,0,0};
+	graphene_map['U']={1,0,1,0,1};
+	graphene_map['V']={1,0,1,1,0};
+	graphene_map['W']={1,0,1,1,1};
+	graphene_map['X']={1,1,0,0,0};
+	graphene_map['Y']={1,1,0,0,1};
+	graphene_map['Z']={1,1,0,1,0};
 
     phoneme_map["AA"]={0,0,0,0,0,0,1};
     phoneme_map["AA0"]={0,0,0,0,0,1,0};
@@ -122,6 +153,7 @@ void initialize(){
     phoneme_map["Z"]={1,0,1,0,0,1,1};
     phoneme_map["ZH"]={1,0,1,0,1,0,0};
     phoneme_map["ZH"]={1,0,1,0,1,0,1};
+    debug("intitializing done");
 
 }
 
@@ -159,30 +191,35 @@ struct CBackProp{
 
         // Note that the following are unused delta[0], weight[0],prevDwt[0]
         //    set no of layers and their sizes
+        debug("entered contructor\n");
         numl=nl;
-        (*lsize).resize(numl);
-
+        lsize = new vector<int>(numl);
+        debug(1);
         for(int i=0;i<numl;i++){
             (*lsize)[i]=sz[i];
         }
 
         //    allocate memory for output of each neuron
-        (*out).resize(numl);
+        out = new vector<vector<double> >(numl);
+        //(*out).resize(numl);
         int i;
+        debug(2);
         for( i=0;i<numl;i++){
             (*out)[i].resize((*lsize)[i]);
         }
 
         //    allocate memory for delta
-        (*delta).resize(numl);
-
+        delta = new vector<vector<double> >(numl);
+        //(*delta).resize(numl);
+        debug(3);
         for(i=1;i<numl;i++){
             (*delta)[i].resize((*lsize)[i]);
         }
 
         //    allocate memory for weights
-        (*weight).resize(numl);
-
+        weight = new vector<vector<vector<double> > >(numl);
+        //(*weight).resize(numl);
+        debug(4);
         for(i=1;i<numl;i++){
             (*weight)[i].resize((*lsize)[i]);
         }
@@ -193,12 +230,15 @@ struct CBackProp{
         }
 
         //    allocate memory for previous weights
-        (*prevDwt).resize(numl);
-
+        prevDwt = new vector<vector<vector<double> > >(numl);
+        //(*prevDwt).resize(numl);
+        debug(5);
         for(i=1;i<numl;i++){
             (*prevDwt)[i].resize((*lsize)[i]);
 
         }
+
+        debug(6);
         for(i=1;i<numl;i++){
             for(int j=0;j<(*lsize)[i];j++){
                 (*prevDwt)[i][j].resize((*lsize)[i-1]+1);
@@ -207,12 +247,14 @@ struct CBackProp{
 
         //    seed and assign random weights
         srand((unsigned)(time(NULL)));
+        debug(7);
         for(i=1;i<numl;i++)
             for(int j=0;j<(*lsize)[i];j++)
                 for(int k=0;k<(*lsize)[i-1]+1;k++)
                     (*weight)[i][j][k]=0.0;
 
         //    initialize previous weights to 0 for first iteration
+        debug(8);
         for(i=1;i<numl;i++)
             for(int j=0;j<(*lsize)[i];j++)
                 for(int k=0;k<(*lsize)[i-1]+1;k++)
@@ -303,14 +345,11 @@ struct CBackProp{
         return mse/2;
     }
 
-
-//      returns i'th output of the net
-    double Out(int i) const;
 };
 
 void convertInputStringToBinary(string input, vector<int> &input_to_int){
-    for(int i = 0; i < input.size(); i++){
-       input_to_int.insert(input_to_int.end(),graphene_map[input[i]].begin(),graphene_map[input[i]].end());
+    for(int i = 0; i < input.length(); i++){
+        input_to_int.insert(input_to_int.end(),graphene_map[input[i]].begin(),graphene_map[input[i]].end());
     }
 }
 
@@ -321,28 +360,51 @@ void convertOutputStringToBinary(vector<string> output, vector<int>& output_to_i
 }
 
 int main(){
-	longest = 9;
+	longest = 28;
     int layer_count = 3;
     int layer_size[] = {longest*5,longest*6, longest*7};
-    int beta = 0.2;
+    double beta = 0.4;
     double thresh = 0.00001;
+    initialize();
+    debug("constructor called");
     CBackProp *bp = new CBackProp(layer_count, layer_size, beta);
 
-    for(long i = 0 ; i < 10000000; i++){
+    debug("constructor success");
+    ifstream fin;
+    fin.open("output.txt");
+    string line;
 
-        string input = "KUBENA";
-        vector<string> output = {"K", "AH0" ,"B", "IY1", "N", "AH0"};
-        vector<int> input_to_int, output_to_int;
-        convertInputStringToBinary(input,input_to_int);
-        convertOutputStringToBinary(output,output_to_int);
-        bp->bpgt(&input_to_int,&output_to_int);
-        double error = bp->mse(&output_to_int);
-        if(error < thresh) {
-            cout<<"accuracy of threshold acheived in iteration:"<<i<< " and error is"<<error<<'\n';
-            break;
+
+    for(long i = 0 ; i < 20000; i++){
+        if( getline(fin,line)){
+
+            vector<string> words;
+            tokenize(line, words," ");
+
+            vector<string> output(words.begin()+1, words.end());
+            vector<int> input_to_int, output_to_int;
+
+            convertInputStringToBinary(words[0],input_to_int);
+            input_to_int.resize(longest*5,0);
+            //debug("to convert input"<<words[0]);
+
+            convertOutputStringToBinary(output,output_to_int);
+            output_to_int.resize(longest*7,0);
+
+            bp->bpgt(&input_to_int,&output_to_int);
+
+            double error = bp->mse(&output_to_int);
+            if(error < thresh) {
+                cout<<"accuracy of threshold acheived in iteration:"<<i<< " and error is"<<error<<'\n';
+                break;
+            }
+            if(i%10==0){
+                cout<<"error is "<<bp->mse(&output_to_int)<<endl;
+            }
         }
-        if(i%10==0){
-            cout<<"error is "<<bp->mse(&output_to_int);
+        else{
+            fin.close();
+            fin.open("output.txt");
         }
     }
 }
